@@ -153,6 +153,9 @@ public:
       if constexpr (std::is_same_v<CaseT, mlir::substrait::FieldReferenceOp> ||
                     std::is_same_v<CaseT, mlir::substrait::LiteralOp>) {
         std::cerr << "cast succeeded\n";
+        std::cerr << "  operation: " << caseValue.getOperation() << "\n";
+        std::cerr << "  dump: ";
+        caseValue.dump();
       }
       result.emplace(caseFn(caseValue));
     }
