@@ -17,9 +17,17 @@
 #include "llvm/Support/Compiler.h"
 #include "llvm/Support/type_traits.h"
 #include <cassert>
+#include <iostream>
 #include <memory>
 #include <optional>
 #include <type_traits>
+
+namespace mlir {
+namespace substrait {
+class FieldReferenceOp;
+class LiteralOp;
+} // namespace substrait
+} // namespace mlir
 
 namespace llvm {
 
@@ -490,8 +498,24 @@ struct CastInfo : public CastIsPossible<To, From> {
   static inline CastReturnType castFailed() { return CastReturnType(nullptr); }
 
   static inline CastReturnType doCastIfPossible(const From &f) {
-    if (!Self::isPossible(f))
+
+    if constexpr (std::is_same_v<To, mlir::substrait::FieldReferenceOp> ||
+                  std::is_same_v<To, mlir::substrait::LiteralOp>) {
+      std::cerr << __PRETTY_FUNCTION__ << "\n";
+    }
+    if (!Self::isPossible(f)) {
+
+      if constexpr (std::is_same_v<To, mlir::substrait::FieldReferenceOp> ||
+                    std::is_same_v<To, mlir::substrait::LiteralOp>) {
+        std::cerr << "cast not possible\n";
+      }
       return castFailed();
+    }
+
+    if constexpr (std::is_same_v<To, mlir::substrait::FieldReferenceOp> ||
+                  std::is_same_v<To, mlir::substrait::LiteralOp>) {
+      std::cerr << "cast possible\n";
+    }
     return doCast(f);
   }
 };
@@ -647,24 +671,40 @@ template <typename T> inline decltype(auto) unwrapValue(T &t) {
 
 template <typename To, typename From>
 [[nodiscard]] inline decltype(auto) dyn_cast(const From &Val) {
+  if constexpr (std::is_same_v<To, mlir::substrait::FieldReferenceOp> ||
+                std::is_same_v<To, mlir::substrait::LiteralOp>) {
+    std::cerr << __PRETTY_FUNCTION__ << "\n";
+  }
   assert(detail::isPresent(Val) && "dyn_cast on a non-existent value");
   return CastInfo<To, const From>::doCastIfPossible(Val);
 }
 
 template <typename To, typename From>
 [[nodiscard]] inline decltype(auto) dyn_cast(From &Val) {
+  if constexpr (std::is_same_v<To, mlir::substrait::FieldReferenceOp> ||
+                std::is_same_v<To, mlir::substrait::LiteralOp>) {
+    std::cerr << __PRETTY_FUNCTION__ << "\n";
+  }
   assert(detail::isPresent(Val) && "dyn_cast on a non-existent value");
   return CastInfo<To, From>::doCastIfPossible(Val);
 }
 
 template <typename To, typename From>
 [[nodiscard]] inline decltype(auto) dyn_cast(From *Val) {
+  if constexpr (std::is_same_v<To, mlir::substrait::FieldReferenceOp> ||
+                std::is_same_v<To, mlir::substrait::LiteralOp>) {
+    std::cerr << __PRETTY_FUNCTION__ << "\n";
+  }
   assert(detail::isPresent(Val) && "dyn_cast on a non-existent value");
   return CastInfo<To, From *>::doCastIfPossible(Val);
 }
 
 template <typename To, typename From>
 [[nodiscard]] inline decltype(auto) dyn_cast(std::unique_ptr<From> &Val) {
+  if constexpr (std::is_same_v<To, mlir::substrait::FieldReferenceOp> ||
+                std::is_same_v<To, mlir::substrait::LiteralOp>) {
+    std::cerr << __PRETTY_FUNCTION__ << "\n";
+  }
   assert(detail::isPresent(Val) && "dyn_cast on a non-existent value");
   return CastInfo<To, std::unique_ptr<From>>::doCastIfPossible(Val);
 }

@@ -17,7 +17,15 @@
 
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/Support/Casting.h"
+#include <iostream>
 #include <optional>
+
+namespace mlir {
+namespace substrait {
+class FieldReferenceOp;
+class LiteralOp;
+} // namespace substrait
+} // namespace mlir
 
 namespace llvm {
 namespace detail {
@@ -42,6 +50,11 @@ public:
   // traces.
   LLVM_ATTRIBUTE_ALWAYS_INLINE LLVM_ATTRIBUTE_NODEBUG DerivedT &
   Case(CallableT &&caseFn) {
+    if constexpr (std::is_same_v<CallableT,
+                                 mlir::substrait::FieldReferenceOp> ||
+                  std::is_same_v<CallableT, mlir::substrait::LiteralOp>) {
+      std::cerr << __PRETTY_FUNCTION__ << "\n";
+    }
     DerivedT &derived = static_cast<DerivedT &>(*this);
     return derived.template Case<CaseT>(caseFn)
         .template Case<CaseT2, CaseTs...>(caseFn);
@@ -52,6 +65,11 @@ public:
   /// Note: This inference rules for this overload are very simple: strip
   ///       pointers and references.
   template <typename CallableT> DerivedT &Case(CallableT &&caseFn) {
+    if constexpr (std::is_same_v<CallableT,
+                                 mlir::substrait::FieldReferenceOp> ||
+                  std::is_same_v<CallableT, mlir::substrait::LiteralOp>) {
+      std::cerr << __PRETTY_FUNCTION__ << "\n";
+    }
     using Traits = function_traits<std::decay_t<CallableT>>;
     using CaseT = std::remove_cv_t<std::remove_pointer_t<
         std::remove_reference_t<typename Traits::template arg_t<0>>>>;
@@ -74,6 +92,10 @@ protected:
       ValueT &&value,
       std::enable_if_t<is_detected<has_dyn_cast_t, ValueT, CastT>::value> * =
           nullptr) {
+    if constexpr (std::is_same_v<CastT, mlir::substrait::FieldReferenceOp> ||
+                  std::is_same_v<CastT, mlir::substrait::LiteralOp>) {
+      std::cerr << __PRETTY_FUNCTION__ << "\n";
+    }
     return value.template dyn_cast<CastT>();
   }
 
@@ -84,6 +106,10 @@ protected:
       ValueT &&value,
       std::enable_if_t<!is_detected<has_dyn_cast_t, ValueT, CastT>::value> * =
           nullptr) {
+    if constexpr (std::is_same_v<CastT, mlir::substrait::FieldReferenceOp> ||
+                  std::is_same_v<CastT, mlir::substrait::LiteralOp>) {
+      std::cerr << __PRETTY_FUNCTION__ << "\n";
+    }
     return dyn_cast<CastT>(value);
   }
 
@@ -117,9 +143,24 @@ public:
     if (result)
       return *this;
 
+    if constexpr (std::is_same_v<CaseT, mlir::substrait::FieldReferenceOp> ||
+                  std::is_same_v<CaseT, mlir::substrait::LiteralOp>) {
+      std::cerr << __PRETTY_FUNCTION__ << "\n";
+    }
     // Check to see if CaseT applies to 'value'.
-    if (auto caseValue = BaseT::template castValue<CaseT>(this->value))
+    if (auto caseValue = BaseT::template castValue<CaseT>(this->value)) {
+
+      if constexpr (std::is_same_v<CaseT, mlir::substrait::FieldReferenceOp> ||
+                    std::is_same_v<CaseT, mlir::substrait::LiteralOp>) {
+        std::cerr << "cast succeeded\n";
+      }
       result.emplace(caseFn(caseValue));
+    }
+
+    if constexpr (std::is_same_v<CaseT, mlir::substrait::FieldReferenceOp> ||
+                  std::is_same_v<CaseT, mlir::substrait::LiteralOp>) {
+      std::cerr << "cast failed\n";
+    }
     return *this;
   }
 
