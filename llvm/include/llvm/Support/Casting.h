@@ -502,7 +502,6 @@ struct CastInfo : public CastIsPossible<To, From> {
       std::cerr << "constructing CastReturnType\n";
       auto val = CastReturnType(nullptr);
       std::cerr << "castFailed: " << val << "\n";
-      return val;
     }
     return CastReturnType(nullptr);
   }
@@ -520,7 +519,6 @@ struct CastInfo : public CastIsPossible<To, From> {
         std::cerr << "cast not possible\n";
         auto val = castFailed();
         std::cerr << "doCastIfPossible: " << val << "\n";
-        return val;
       }
       return castFailed();
     }
@@ -689,7 +687,6 @@ template <typename To, typename From>
     std::cerr << __PRETTY_FUNCTION__ << "\n";
     auto val = CastInfo<To, const From>::doCastIfPossible(Val);
     std::cerr << "dyn_cast: " << val << "\n";
-    return val;
   }
   assert(detail::isPresent(Val) && "dyn_cast on a non-existent value");
   return CastInfo<To, const From>::doCastIfPossible(Val);
