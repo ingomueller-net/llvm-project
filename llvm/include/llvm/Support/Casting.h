@@ -495,7 +495,17 @@ struct CastInfo : public CastIsPossible<To, From> {
   // This assumes that you can construct the cast return type from `nullptr`.
   // This is largely to support legacy use cases - if you don't want this
   // behavior you should specialize CastInfo for your use case.
-  static inline CastReturnType castFailed() { return CastReturnType(nullptr); }
+  static inline CastReturnType castFailed() {
+    if constexpr (std::is_same_v<To, mlir::substrait::FieldReferenceOp> ||
+                  std::is_same_v<To, mlir::substrait::LiteralOp>) {
+      std::cerr << __PRETTY_FUNCTION__ << "\n";
+      std::cerr << "constructing CastReturnType\n";
+      auto val = CastReturnType(nullptr);
+      std::cerr << val << "\n";
+      return val;
+    }
+    return CastReturnType(nullptr);
+  }
 
   static inline CastReturnType doCastIfPossible(const From &f) {
 
@@ -508,6 +518,9 @@ struct CastInfo : public CastIsPossible<To, From> {
       if constexpr (std::is_same_v<To, mlir::substrait::FieldReferenceOp> ||
                     std::is_same_v<To, mlir::substrait::LiteralOp>) {
         std::cerr << "cast not possible\n";
+        auto val = castFailed();
+        std::cerr << val << "\n";
+        return val;
       }
       return castFailed();
     }
