@@ -109,6 +109,9 @@ protected:
     if constexpr (std::is_same_v<CastT, mlir::substrait::FieldReferenceOp> ||
                   std::is_same_v<CastT, mlir::substrait::LiteralOp>) {
       std::cerr << __PRETTY_FUNCTION__ << "\n";
+      auto val = dyn_cast<CastT>(value);
+      std::cerr << "castValue: " << val << "\n";
+      return val;
     }
     return dyn_cast<CastT>(value);
   }
